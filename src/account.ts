@@ -1,4 +1,3 @@
-import { _base36To16 } from '@ethersproject/bignumber'
 import * as assert from 'assert'
 import { bech32 } from 'bech32'
 import { hash as b3hash } from 'blake3'
