@@ -1,7 +1,20 @@
 import * as crypto from 'crypto'
 import * as ed25519 from 'ed25519'
-import { entropyToMnemonic } from 'ethers/lib/utils'
+import { base64, entropyToMnemonic } from 'ethers/lib/utils'
 import * as NodeRSA from 'node-rsa'
+
+export class Key {
+    material: Buffer
+    static fromString(key: string) {
+        return new Key(Buffer.from(base64.decode(key)))
+    }
+    constructor(material: Buffer) {
+        this.material = material
+    }
+    toString() {
+        return this.material.toString('base64')
+    }
+}
 
 export type PublicKeyChainOptions = {
     publicEncryptionKey: string
@@ -10,13 +23,18 @@ export type PublicKeyChainOptions = {
 
 export type ProtectedKeyChainOptions = {
     privateEncryptionKey?: string
-    mnemonic?: string
+    privateSigningKeyMnemonic?: string
+}
+
+export type NodeED25519 = {
+    publicKey: Key,
+    privateKey: Key
 }
 
 export class KeyChain {
     readonly publicOnly: boolean
-    private signingKeys: { publicKey: Buffer, privateKey: Buffer }
-    private encryptionKeys: any
+    private signingKeys: NodeED25519
+    private encryptionKeys: NodeRSA
     readonly mnemonic: string
 
     /**
@@ -35,42 +53,38 @@ export class KeyChain {
      * Verifies the signature over the message
      * @param message 
      * @param signature base64 encoded
-     * @param publicSigningKey base64 encoded
+     * @param publicSigningKey Buffer
      * @returns True if the key signed the message
      */
-    static verify(message: string, signature: string, publicSigningKey: string): boolean {
+    static verify(message: string, signature: string, publicSigningKey: Buffer): boolean {
         return ed25519.Verify(
             Buffer.from(message, 'utf8'),
             Buffer.from(signature, 'base64'),
-            Buffer.from(publicSigningKey, 'base64')
+            publicSigningKey
         )
     }
 
     constructor(options: PublicKeyChainOptions | ProtectedKeyChainOptions) {
-        if (options as PublicKeyChainOptions) {
+        if ((options as PublicKeyChainOptions).publicEncryptionKey) {
+            this.publicOnly = true
+            this.encryptionKeys = importPublicEncryptionKey(<PublicKeyChainOptions>options)
+            this.signingKeys = importPublicSigningKey(<PublicKeyChainOptions>options)
             return
         }
-        const encryptionKeys = new NodeRSA()
+
+        this.publicOnly = false
         if ((options as ProtectedKeyChainOptions).privateEncryptionKey) {
-            encryptionKeys.importKey(
-                (options as ProtectedKeyChainOptions).privateEncryptionKey,
-                'openssh-private-pem'
-            )
+            this.encryptionKeys = importPrivateEncryptionKey(<ProtectedKeyChainOptions>options)
         } else {
-            encryptionKeys.generateKeyPair(512)
+            this.encryptionKeys = (new NodeRSA()).generateKeyPair(512)
         }
-        if (!(options as ProtectedKeyChainOptions).mnemonic) {
-            (options as ProtectedKeyChainOptions).mnemonic = entropyToMnemonic(
-                crypto.randomBytes(32)
-            )
+        if ((options as ProtectedKeyChainOptions).privateSigningKeyMnemonic) {
+            this.mnemonic = (options as ProtectedKeyChainOptions).privateSigningKeyMnemonic
+            this.signingKeys = generateSigningKeys(this.mnemonic)
+        } else {
+            this.mnemonic = generateMnemonic()
+            this.signingKeys = generateSigningKeys(this.mnemonic)
         }
-        const seed = crypto.createHash('sha256').update(
-            (options as ProtectedKeyChainOptions).mnemonic
-        ).digest()
-        const signingKeys = ed25519.MakeKeypair(seed)
-        this.encryptionKeys = encryptionKeys
-        this.signingKeys = signingKeys
-        this.mnemonic = (options as ProtectedKeyChainOptions).mnemonic
     }
 
     /**
@@ -92,25 +106,19 @@ export class KeyChain {
 
     /**
      * Returns public key used for signature verification
-     * @returns base64 encoded ED25519 public key
+     * @returns Key object containing ED25519 public key
      */
-    getPublicSigningKey(opts: { asBuffer: boolean } = { asBuffer: false }): Buffer | string {
-        if (opts.asBuffer) {
-            return this.signingKeys.publicKey
-        }
-        return this.signingKeys.publicKey.toString('base64')
+    getPublicSigningKey(): Key {
+        return this.signingKeys.publicKey
     }
 
     /**
      * Returns private key used for signing
-     * @returns base64 encoded ED25519 private key
+     * @returns Key object containing ED25519 private key
      */
-    getPrivateSigningKey(opts: { asBuffer: boolean } = { asBuffer: false }): Buffer | string {
+    getPrivateSigningKey(): Key {
         if (this.publicOnly) return null
-        if (opts.asBuffer) {
-            return this.signingKeys.privateKey
-        }
-        return this.signingKeys.privateKey.toString('base64')
+        return this.signingKeys.privateKey
     }
 
     decrypt(ciphertext: string): string {
@@ -125,14 +133,52 @@ export class KeyChain {
      */
     sign(message: string): string {
         if (this.publicOnly) return null
-        return ed25519.Sign(Buffer.from(message, 'utf8'), this.signingKeys.privateKey).toString('base64')
+        return ed25519.Sign(Buffer.from(message, 'utf8'), this.signingKeys.privateKey.material).toString('base64')
     }
 
     encrypt(plaintext: string): string {
-        return KeyChain.encrypt(this.getPublicEncryptionKey(), plaintext)
+        return KeyChain.encrypt(this.encryptionKeys.exportKey('openssh-public-pem'), plaintext)
     }
 
     verify(message: string, signature: string): boolean {
-        return KeyChain.verify(message, signature, this.getPublicSigningKey() as string)
+        return KeyChain.verify(message, signature, this.signingKeys.publicKey.material)
+    }
+}
+
+function generateMnemonic(): string {
+    return entropyToMnemonic(crypto.randomBytes(32))
+}
+
+function generateSigningKeys(mnemonic: string): NodeED25519  {
+    const seed = crypto.createHash('sha256').update(
+        mnemonic
+    ).digest()
+    const keypair = ed25519.MakeKeypair(seed)
+    return {
+        publicKey: new Key(keypair.publicKey),
+        privateKey: new Key(keypair.privateKey)
+    }
+}
+
+function importPublicEncryptionKey(options: PublicKeyChainOptions): NodeRSA {
+    const encryptionKeys = new NodeRSA()
+    return encryptionKeys.importKey(
+        (options as PublicKeyChainOptions).publicEncryptionKey,
+        'openssh-public-pem'
+    )
+}
+
+function importPrivateEncryptionKey(options: ProtectedKeyChainOptions): NodeRSA {
+    const encryptionKeys = new NodeRSA()
+    return encryptionKeys.importKey(
+        options.privateEncryptionKey,
+        'openssh-private-pem'
+    )
+}
+
+function importPublicSigningKey(options: PublicKeyChainOptions) {
+    return {
+        publicKey: Key.fromString(options.publicSigningKey),
+        privateKey: null
     }
 }

@@ -1,40 +1,47 @@
 import * as assert from 'assert'
 import { bech32 } from 'bech32'
 import { hash as b3hash } from 'blake3'
-import { KeyChain } from './keychain'
+import { Key, KeyChain, ProtectedKeyChainOptions, PublicKeyChainOptions } from './keychain'
 
 export interface IAccount {
     address: string
     isExternal(): boolean
     getAddress(version?: number): string
     getPublicEncryptionKey(): string
-    getPublicSigningKey(): string
+    getPublicSigningKey(): Key
 }
 
 abstract class AAccount implements IAccount {
     protected keychain: KeyChain
     address: string
 
+    constructor(options: PublicKeyChainOptions | ProtectedKeyChainOptions) {
+        this.keychain = new KeyChain(options)
+        this.address = this.getAddress()
+    }
+
     abstract isExternal(): boolean
 
     getAddress(version: number = 0x0): string {
-        return constructAddress(this.keychain.getPublicSigningKey() as Buffer, version)
+        return constructAddress(this.keychain.getPublicSigningKey().material, version)
     }
 
     getPublicEncryptionKey(): string {
         return this.keychain.getPublicEncryptionKey()
     }
 
-    getPublicSigningKey(): string {
-        return this.keychain.getPublicSigningKey() as string
+    getPublicSigningKey(): Key {
+        return this.keychain.getPublicSigningKey()
     }
 }
 
 export class Account extends AAccount {
-    constructor(privateEncryptionKey?: string, mnemonic?: string) {
-        super()
-        this.keychain = new KeyChain({privateEncryptionKey, mnemonic})
-        this.address = this.getAddress()
+    constructor(privateEncryptionKey?: string, privateSigningKeyMnemonic?: string) {
+        const options: ProtectedKeyChainOptions = {
+            privateEncryptionKey,
+            privateSigningKeyMnemonic
+        }
+        super(options)
     }
 
     isExternal(): boolean {
@@ -52,9 +59,11 @@ export class Account extends AAccount {
 
 export class AccountExternal extends AAccount {
     constructor(publicEncryptionKey: string, publicSigningKey: string) {
-        super()
-        this.keychain = new KeyChain({publicEncryptionKey, publicSigningKey})
-        this.address = this.getAddress()
+        const options: PublicKeyChainOptions = {
+            publicEncryptionKey,
+            publicSigningKey
+        }
+        super(options)
     }
 
     isExternal(): boolean {
