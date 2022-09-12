@@ -11,7 +11,11 @@ export class Key {
     constructor(material: Buffer) {
         this.material = material
     }
-    toString() {
+    /**
+     * Returns base64 encoded string of buffer
+     * @returns
+     */
+    toString(): string {
         return this.material.toString('base64')
     }
 }

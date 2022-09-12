@@ -8,8 +8,11 @@ specifiers:
   bech32: ^2.0.0
   blake3: ^2.1.7
   chai: ^4.3.6
+  commander: ^9.4.0
   ed25519: ^0.0.5
   ethers: ^5.6.9
+  inquirer: ^9.1.1
+  level: ^8.0.0
   mocha: ^10.0.0
   node-rsa: ^1.1.1
   prompt-sync: ^4.2.0
@@ -21,8 +24,11 @@ dependencies:
   '@bitauth/libauth': 1.19.1
   bech32: 2.0.0
   blake3: 2.1.7
+  commander: 9.4.0
   ed25519: 0.0.5
   ethers: 5.7.0
+  inquirer: 9.1.1
+  level: 8.0.0
   node-rsa: 1.1.1
   prompt-sync: 4.2.0
   thirty-two: 1.0.2

@@ -36,6 +36,13 @@ abstract class AAccount implements IAccount {
 }
 
 export class Account extends AAccount {
+    static fromKeyChain(keychain: KeyChain): Account {
+        return new Account(
+            keychain.getPrivateEncryptionKey(),
+            keychain.getPrivateSigningKey().toString()
+        )
+    }
+
     constructor(privateEncryptionKey?: string, privateSigningKeyMnemonic?: string) {
         const options: ProtectedKeyChainOptions = {
             privateEncryptionKey,
