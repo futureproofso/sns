@@ -60,10 +60,10 @@ program
             console.log(`Name (${name}) is available!`)
             const keychain = await readKeyChainFromFile(path)
             const account = Account.fromKeyChain(keychain)
-            const sns = new SecretName(name)
-            sns.setController(account)
+            const sn = new SecretName(name)
+            sn.setController(account)
             const db = new Level(`${path}db/`, { valueEncoding: 'json' })
-            await writeSecretNameToDb(db, sns)
+            await writeSecretNameToDb(db, sn)
             console.log(`Name (${name}) reserved!`)
         }
     })
@@ -86,9 +86,9 @@ async function readKeyChainFromFile(path: string): Promise<KeyChain> {
     return new KeyChain({privateEncryptionKey: encKeyRSA, privateSigningKeyMnemonic: secretPhrase})
 }
 
-async function writeSecretNameToDb(db: any, sns: SecretName): Promise<void> {
-    const data = sns.serialize()
-    const key = `sns:${sns.name}`
+async function writeSecretNameToDb(db: any, sn: SecretName): Promise<void> {
+    const data = sn.serialize()
+    const key = `sn:${sn.name}`
     let nextCount = 0
     let nextValue = { [nextCount]: data }
     try {

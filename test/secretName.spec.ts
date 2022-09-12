@@ -17,11 +17,11 @@ const emptyLutRecord: LutRecord = {
 
 describe('SecretName', () => {
     it('starts with only a name', () => {
-        const secretName = new SN('stickykeys')
-        expect(secretName.name).to.equal('stickykeys')
-        expect(secretName.isExternal()).to.be.false
-        expect(secretName.secrets).to.deep.equal({})
-        expect(() => secretName.putSecret(emptyLutRecord)).to.throw()
+        const sn = new SN('stickykeys')
+        expect(sn.name).to.equal('stickykeys')
+        expect(sn.isExternal()).to.be.false
+        expect(sn.secrets).to.deep.equal({})
+        expect(() => sn.putSecret(emptyLutRecord)).to.throw()
     })
     describe('setController', () => {
         it('throws if passed an external account', () => {
