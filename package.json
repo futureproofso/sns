@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Secret Naming System",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "tsc && node ./out/index.js",
     "test": "mocha -r ts-node/register test/**/*.spec.ts"

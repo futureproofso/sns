@@ -1,7 +1,7 @@
 import * as crypto from 'crypto'
-import * as ed25519 from 'ed25519'
-import { base64, entropyToMnemonic } from 'ethers/lib/utils'
-import * as NodeRSA from 'node-rsa'
+import ed25519 from 'ed25519'
+import { base64, entropyToMnemonic } from 'ethers/lib/utils.js'
+import NodeRSA from 'node-rsa'
 
 export class Key {
     material: Buffer
@@ -34,7 +34,7 @@ export type NodeED25519 = {
 export class KeyChain {
     readonly publicOnly: boolean
     private signingKeys: NodeED25519
-    private encryptionKeys: NodeRSA
+    private encryptionKeys: typeof NodeRSA
     readonly mnemonic: string
 
     /**
@@ -44,7 +44,7 @@ export class KeyChain {
      * @returns base64 encoded ciphertext
      */
     static encrypt(publicEncryptionKey: string, plaintext: string): string {
-        const encryptionKeys = new NodeRSA()
+        const encryptionKeys = NodeRSA()
         encryptionKeys.importKey(publicEncryptionKey, 'openssh-public')
         return encryptionKeys.encrypt(plaintext, 'base64')
     }
@@ -76,7 +76,7 @@ export class KeyChain {
         if ((options as ProtectedKeyChainOptions).privateEncryptionKey) {
             this.encryptionKeys = importPrivateEncryptionKey(<ProtectedKeyChainOptions>options)
         } else {
-            this.encryptionKeys = (new NodeRSA()).generateKeyPair(512)
+            this.encryptionKeys = NodeRSA().generateKeyPair(512)
         }
         if ((options as ProtectedKeyChainOptions).privateSigningKeyMnemonic) {
             this.mnemonic = (options as ProtectedKeyChainOptions).privateSigningKeyMnemonic
@@ -160,16 +160,16 @@ function generateSigningKeys(mnemonic: string): NodeED25519  {
     }
 }
 
-function importPublicEncryptionKey(options: PublicKeyChainOptions): NodeRSA {
-    const encryptionKeys = new NodeRSA()
+function importPublicEncryptionKey(options: PublicKeyChainOptions): typeof NodeRSA {
+    const encryptionKeys = NodeRSA()
     return encryptionKeys.importKey(
         (options as PublicKeyChainOptions).publicEncryptionKey,
         'openssh-public-pem'
     )
 }
 
-function importPrivateEncryptionKey(options: ProtectedKeyChainOptions): NodeRSA {
-    const encryptionKeys = new NodeRSA()
+function importPrivateEncryptionKey(options: ProtectedKeyChainOptions): typeof NodeRSA {
+    const encryptionKeys = NodeRSA()
     return encryptionKeys.importKey(
         options.privateEncryptionKey,
         'openssh-private-pem'

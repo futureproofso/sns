@@ -1,7 +1,7 @@
 import * as assert from 'assert'
-import { bech32 } from 'bech32'
+import * as bech32 from 'bech32'
 import { hash as b3hash } from 'blake3'
-import { Key, KeyChain, ProtectedKeyChainOptions, PublicKeyChainOptions } from './keychain'
+import { Key, KeyChain, ProtectedKeyChainOptions, PublicKeyChainOptions } from './keychain.js'
 
 export interface IAccount {
     address: string
@@ -83,6 +83,6 @@ export function constructAddress(key: Buffer, version: number = 0x0) {
     const ver = Buffer.from([version])
     const dig = b3hash(key.toString('hex')).slice(1)
     const buf = Buffer.concat([ver, dig as Buffer])
-    assert(buf.byteLength == 32, `Invalid buffer byte length: ${buf.byteLength}`)
-    return bech32.encode('pub', bech32.toWords(buf))
+    assert.ok(buf.byteLength == 32, `Invalid buffer byte length: ${buf.byteLength}`)
+    return bech32.bech32.encode('pub', bech32.bech32.toWords(buf))
 }
