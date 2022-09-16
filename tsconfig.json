@@ -3,7 +3,9 @@
         "outDir": "./out",
         "allowJs": true,
         "target": "ES2022",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
     },
     "include": [
         "./src/**/*"
