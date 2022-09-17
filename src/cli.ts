@@ -42,4 +42,22 @@ program
         command.execute(name)
     })
 
+program
+    .command('contact')
+    .command('add')
+    .description('Add to contact list')
+    .argument('<string>', 'public encryption key')
+    .argument('<string>', 'public signing key')
+    .option('-a, --alias <string>', 'alias to help you remember the contact')
+    .option('-p, --path <string>', 'path to sns account', defaultConfig.path)
+    .action(async (publicEncryptionKey, publicSigningKey, { alias, path }) => {
+        const config = defaultConfig
+        config.path = path
+        container.register('config', { useValue: config })
+        const dbFactory = container.resolve<SingletonFactory>('DatabaseFactory')
+        dbFactory.create<FileSystemDb>({ path })
+        const command = container.resolve(commands.ContactAdd)
+        command.execute(publicEncryptionKey, publicSigningKey, alias)
+    })
+
 program.parse();
