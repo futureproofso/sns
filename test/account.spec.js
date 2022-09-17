@@ -1,11 +1,11 @@
 import 'mocha'
 import { expect } from 'chai'
-import { Account, AccountExternal } from '../src/account'
-import { isBase64 } from '../src/utils'
+import { Account, AccountExternal } from '../out/account.js'
+import { isBase64 } from '../out/utils.js'
 import { bech32 } from 'bech32'
-import { KeyChain } from '../src/keychain'
+import { KeyChain } from '../out/keychain.js'
 
-const PRIVATE_KEY: string = `-----BEGIN OPENSSH PRIVATE KEY-----
+const PRIVATE_KEY = `-----BEGIN OPENSSH PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAVwAAAAdzc2gtcn
 NhAAAAAwEAAQAAAEEAhPtzL3hfDwDAh+Rg6KfwHUbjuUeQFMMuWTH2SuJ6ifevEh5blR3b
 U7yMlNTgrS54F9vEFSef2eYR9u+8P3KfiQAAARgAAAAAAAAAAAAAAAdzc2gtcnNhAAAAQQ
@@ -146,5 +146,13 @@ describe('address', () => {
         const acct = new Account()
         const dane = new AccountExternal(acct.getPublicEncryptionKey(), acct.getPublicSigningKey().toString())
         expect(dane.getAddress()).to.equal(acct.getAddress())
+    })
+})
+
+describe.only('show account external', () => {
+    it('logs to console', () => {
+        const acct = new Account()
+        console.log('publicEncryptionKey', acct.getPublicEncryptionKey())
+        console.log('publicSigningKey', acct.getPublicSigningKey().toString())
     })
 })

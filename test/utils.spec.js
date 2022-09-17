@@ -1,6 +1,6 @@
 import 'mocha'
 import { expect } from 'chai'
-import { chunk } from '../src/utils'
+import { chunk } from '../out/utils.js'
 
 describe('chunk', () => {
     it('abcd, 4 -> [abcd]', () => {

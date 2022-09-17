@@ -1,11 +1,10 @@
 import 'mocha'
 import { expect } from 'chai'
 
-import { Account, AccountExternal } from '../src/account'
-import { SecretName as SN } from '../src/secretName'
-import { createLutRecord, LutRecord } from '../src/lut'
+import { Account, AccountExternal } from '../out/account.js'
+import { SecretName as SN } from '../out/secretName.js'
 
-const emptyLutRecord: LutRecord = {
+const emptyLutRecord = {
     to: '',
     from: '',
     data: {
