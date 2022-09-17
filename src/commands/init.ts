@@ -24,8 +24,6 @@ const initQuestions = {
 
 @injectable()
 export class Init implements Command {
-    name = 'reserveName'
-
     constructor(@inject('config') private config: Config) {
         this.config = config
     }

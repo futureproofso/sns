@@ -6,9 +6,7 @@ import { Config, readKeyChainFromFile } from '../config.js'
 import { Command } from './index.js'
 
 @injectable()
-export class ReserveName implements Command {
-    name = 'reserveName'
-
+export class NameReserve implements Command {
     constructor(@inject('config') private config: Config, @inject('db') private db: Database) {
         this.config = config
         this.db = db
@@ -23,7 +21,7 @@ export class ReserveName implements Command {
             const account = Account.fromKeyChain(keychain)
             const sn = new SecretName(name)
             sn.setController(account)
-            this.db.writeSecretName(sn)
+            await this.db.writeSecretName(sn)
             console.log(`Name (${name}) reserved!`)
         }
     }

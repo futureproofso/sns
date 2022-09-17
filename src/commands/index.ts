@@ -1,8 +1,6 @@
 export { Init } from './init.js'
-export { ReserveName } from './reserve-name.js'
+export { NameReserve } from './nameReserve.js'
 
 export interface Command {
-    name: string
-    execute: (name: string) => Promise<any>
+    execute: (...args) => Promise<any>
 }
-

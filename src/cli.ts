@@ -38,7 +38,7 @@ program
         container.register('config', { useValue: config })
         const dbFactory = container.resolve<SingletonFactory>('DatabaseFactory')
         dbFactory.create<FileSystemDb>({ path })
-        const command = container.resolve(commands.ReserveName)
+        const command = container.resolve(commands.NameReserve)
         command.execute(name)
     })
 
