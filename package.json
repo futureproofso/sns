@@ -33,6 +33,7 @@
     "node-rsa": "^1.1.1",
     "prompt-sync": "^4.2.0",
     "reflect-metadata": "^0.1.13",
+    "signale": "^1.4.0",
     "thirty-two": "^1.0.2",
     "tsyringe": "^4.7.0"
   }

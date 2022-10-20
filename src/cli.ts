@@ -27,6 +27,19 @@ program
     })
 
 program
+    .command('account')
+    .command('show')
+    .description('Show public account details')
+    .option('-p, --path <string>', 'path to sns account')
+    .action(async ({ path }) => {
+        const config = defaultConfig
+        config.path = path
+        container.register('config', { useValue: config })
+        const command = container.resolve(commands.AccountShow)
+        command.execute()
+    })
+
+program
     .command('name')
     .command('reserve')
     .description('Reserve a name if it is available')

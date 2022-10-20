@@ -32,8 +32,9 @@ export class Init implements Command {
         console.log('Initializing SNS...')
         initQuestions.path.default = this.config.path
         inquirer.prompt(Object.values(initQuestions)).then(async ({ path, createAccount }) => {
-            await fs.promises.mkdir(this.config.path, { recursive: true })
-            await fs.promises.writeFile(`${this.config.path}/VERSION`, VERSION, { encoding: 'utf8' })
+            console.log(`Creating directory ${path}`)
+            await fs.promises.mkdir(path, { recursive: true })
+            await fs.promises.writeFile(`${path}/VERSION`, VERSION, { encoding: 'utf8' })
             const dbFactory = container.resolve<SingletonFactory>('DatabaseFactory')
             dbFactory.create<FileSystemDb>({ path })
             if (createAccount) {

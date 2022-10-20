@@ -1,3 +1,4 @@
+export { AccountShow } from './accountShow.js'
 export { ContactAdd } from './contactAdd.js'
 export { Init } from './init.js'
 export { NameReserve } from './nameReserve.js'
