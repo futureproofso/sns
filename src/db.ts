@@ -55,8 +55,7 @@ export class FileSystemDb implements Database {
 
     async writeSecretName(sn: SecretName): Promise<void> {
         const data = sn.serialize()
-        const key = `sn:${sn.name}`
-        await this.addEntry(key, data)
+        await this.addEntry(sn.name, data, 'sn')
     }
 
     private async addEntry(key: string, data: any, sublevel?: string): Promise<void> {
