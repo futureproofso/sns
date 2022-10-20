@@ -8,7 +8,9 @@ export type FileSystemDbOptions = {
 
 export interface Database {
     client: any
-    readContact: (contact: Contact | string) => Promise<any>
+    getAllContacts: () => AsyncGenerator<Contact>
+    readContact: (address: string) => Promise<Contact>
+    readContactAlias: (alias: string) => Promise<any>
     writeContact: (contact: Contact) => Promise<any>
     writeSecretName: (sn: SecretName) => Promise<any>
 }
@@ -20,15 +22,26 @@ export class FileSystemDb implements Database {
         this.client = new Level(`${options.path}db/`, { valueEncoding: 'json' })
     }
 
-    async readContact(contact: Contact | string): Promise<any> {
-        let address: string
-        if (typeof contact != 'string') {
-            address = contact.address
-        } else {
-            address = contact
+    async * getAllContacts(): any {
+        const db = this.client.sublevel<string, any>('contact', { valueEncoding: 'json' })
+        const iterator = db.keys()
+        let key = await iterator.next()
+        while (key) {
+            if (key.split(':').length < 2) {
+                // skip count key
+                yield await this.getLastEntry(key, 'contact')
+            }
+            key = await iterator.next()
         }
-        const key = `contact:${address}`
-        return await this.getLastEntry(key)
+        return
+    }
+
+    async readContact(address: string): Promise<Contact> {
+        return await this.getLastEntry(address, 'contact')
+    }
+
+    async readContactAlias(alias: string): Promise<any> {
+        return await this.getLastEntry(alias, 'contact:alias')
     }
 
     async writeContact(contact: Contact): Promise<void> {
@@ -58,10 +71,11 @@ export class FileSystemDb implements Database {
         await this.client.put(key, nextValue)
     }
 
-    private async getLastEntry(key: string): Promise<any> {
+    private async getLastEntry(key: string, sublevel?: string): Promise<any> {
+        const db = sublevel ? this.client.sublevel<string, any>(sublevel, { valueEncoding: 'json' }) : this.client
         try {
-            const count = await this.client.get(`${key}:_count`)
-            const value = await this.client.get(key)
+            const count = await db.get(`${key}:_count`)
+            const value = await db.get(key)
             return value[count]
         } catch (error) {
             return null

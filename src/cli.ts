@@ -55,8 +55,8 @@ program
         command.execute(name)
     })
 
-program
-    .command('contact')
+const contact = program.command('contact')
+contact
     .command('add')
     .description('Add to contact list')
     .argument('<string>', 'public encryption key')
@@ -71,6 +71,34 @@ program
         dbFactory.create<FileSystemDb>({ path })
         const command = container.resolve(commands.ContactAdd)
         command.execute(publicEncryptionKey, publicSigningKey, alias)
+    })
+contact
+    .command('show')
+    .description('Show contact')
+    .argument('[string]', 'address')
+    .option('-a, --alias <string>', 'alias of the contact')
+    .option('-p, --path <string>', 'path to sns account', defaultConfig.path)
+    .action(async (address, { alias, path }) => {
+        const config = defaultConfig
+        config.path = path
+        container.register('config', { useValue: config })
+        const dbFactory = container.resolve<SingletonFactory>('DatabaseFactory')
+        dbFactory.create<FileSystemDb>({ path })
+        const command = container.resolve(commands.ContactShow)
+        command.execute({ address, alias })
+    })
+contact
+    .command('list')
+    .description('List all contacts')
+    .option('-p, --path <string>', 'path to sns account', defaultConfig.path)
+    .action(async ({ path }) => {
+        const config = defaultConfig
+        config.path = path
+        container.register('config', { useValue: config })
+        const dbFactory = container.resolve<SingletonFactory>('DatabaseFactory')
+        dbFactory.create<FileSystemDb>({ path })
+        const command = container.resolve(commands.ContactList)
+        command.execute()
     })
 
 program.parse();

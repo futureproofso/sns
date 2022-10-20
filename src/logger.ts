@@ -1,16 +1,26 @@
 import signale from 'signale'
 
 const loggerTypes = {
+    address: {
+        color: 'blue',
+        label: 'address',
+        logLevel: 'info'
+    },
+    alias: {
+        color: 'blue',
+        label: 'alias',
+        logLevel: 'info'
+    },
     encryptionKey: {
         badge: '🔑',
         color: 'yellow',
-        label: 'encryption key',
+        label: 'public encryption key',
         logLevel: 'info'
     },
     signingKey: {
         badge: '🔑',
         color: 'yellow',
-        label: 'signing key',
+        label: 'public signing key',
         logLevel: 'info'
     }
 }
