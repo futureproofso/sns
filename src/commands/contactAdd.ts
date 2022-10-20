@@ -27,6 +27,7 @@ export class ContactAdd implements Command {
             console.log(`Replacing contact for address ${account.address}...`)
         }
         await this.db.writeContact(contact)
+        contact.alias && await this.db.writeContactAlias(contact)
         console.log(`Contact added for address ${account.address}`)
     }
 }

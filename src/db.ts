@@ -12,6 +12,7 @@ export interface Database {
     readContact: (address: string) => Promise<Contact>
     readContactAlias: (alias: string) => Promise<any>
     writeContact: (contact: Contact) => Promise<any>
+    writeContactAlias: (contact: Contact) => Promise<any>
     writeSecretName: (sn: SecretName) => Promise<any>
 }
 
@@ -45,9 +46,11 @@ export class FileSystemDb implements Database {
     }
 
     async writeContact(contact: Contact): Promise<void> {
-        const data = contact
-        const key = `contact:${contact.address}`
-        await this.addEntry(key, data)
+        await this.addEntry(contact.address, contact, 'contact')
+    }
+
+    async writeContactAlias(contact: Contact): Promise<void> {
+        await this.addEntry(contact.alias, contact.address, 'contact:alias')
     }
 
     async writeSecretName(sn: SecretName): Promise<void> {
@@ -56,19 +59,20 @@ export class FileSystemDb implements Database {
         await this.addEntry(key, data)
     }
 
-    private async addEntry(key: string, data: any): Promise<void> {
+    private async addEntry(key: string, data: any, sublevel?: string): Promise<void> {
+        const db = sublevel ? this.client.sublevel<string, any>(sublevel, { valueEncoding: 'json' }) : this.client
         let nextCount = 0
         let nextValue = { [nextCount]: data }
         try {
-            const prevCount = await this.client.get(`${key}:_count`)
+            const prevCount = await db.get(`${key}:_count`)
             nextCount = prevCount + 1
-            const prevValue = await this.client.get(key)
+            const prevValue = await db.get(key)
             nextValue = { ...prevValue, [nextCount]: data }
         } catch (error) {
             // first entry
         }
-        await this.client.put(`${key}:_count`, nextCount)
-        await this.client.put(key, nextValue)
+        await db.put(`${key}:_count`, nextCount)
+        await db.put(key, nextValue)
     }
 
     private async getLastEntry(key: string, sublevel?: string): Promise<any> {
